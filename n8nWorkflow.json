@@ -1,0 +1,295 @@
+{
+  "name": "Universal Medical Search",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "trigger_node",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "webhookId": "4889c204-universal-search",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json[\"message\"][\"text\"].substring(0,3).toUpperCase() }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "PAT",
+              "output": 0
+            },
+            {
+              "value2": "DOC",
+              "output": 1
+            },
+            {
+              "value2": "CON",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "switch_node",
+      "name": "Check ID Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "patients",
+        "query": "={{ JSON.stringify([ { \"$match\": { \"_id\": $json[\"message\"][\"text\"] } } ]) }}"
+      },
+      "id": "mongo_patient",
+      "name": "Search Patients",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        900,
+        100
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "YOUR_MONGODB_CREDENTIAL_ID",
+          "name": "Medical Cluster"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "doctors",
+        "query": "={{ JSON.stringify([ { \"$match\": { \"_id\": $json[\"message\"][\"text\"] } } ]) }}"
+      },
+      "id": "mongo_doctor",
+      "name": "Search Doctors",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "YOUR_MONGODB_CREDENTIAL_ID",
+          "name": "Medical Cluster"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "consultations",
+        "query": "={{ JSON.stringify([ { \"$match\": { \"_id\": $json[\"message\"][\"text\"] } } ]) }}"
+      },
+      "id": "mongo_consultation",
+      "name": "Search Consultations",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "YOUR_MONGODB_CREDENTIAL_ID",
+          "name": "Medical Cluster"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "=👨‍⚕️ <b>Doctor Found</b>\n\n<b>Name:</b> {{ $json[\"name\"] }}\n<b>Specialty:</b> {{ $json[\"specialty\"] }}\n<b>Hospital:</b> {{ $json[\"hospital_id\"] }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "reply_doctor",
+      "name": "Reply Doctor",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1150,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "=👤 <b>Patient Found</b>\n\n<b>Name:</b> {{ $json[\"name\"] }}\n<b>Blood Type:</b> {{ $json[\"blood_type\"] }}\n<b>Hospital:</b> {{ $json[\"hospital_id\"] }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "reply_patient",
+      "name": "Reply Patient",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1150,
+        100
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "=📄 <b>Consultation Found</b>\n\n<b>Date:</b> {{ $json[\"date\"] }}\n<b>Doctor ID:</b> {{ $json[\"doctor_id\"] }}\n<b>Patient ID:</b> {{ $json[\"patient_id\"] }}\n<b>Notes:</b> {{ $json[\"notes\"] }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "reply_consultation",
+      "name": "Reply Consultation",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1150,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $node[\"Telegram Trigger\"].json[\"message\"][\"chat\"][\"id\"] }}",
+        "text": "⚠️ <b>Invalid Format</b>\n\nPlease send an ID starting with:\n- PAT (for Patients)\n- DOC (for Doctors)\n- CONS (for Consultations)",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "reply_error",
+      "name": "Reply Unknown",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        900,
+        700
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check ID Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ID Type": {
+      "main": [
+        [
+          {
+            "node": "Search Patients",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Doctors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Consultations",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply Unknown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Patients": {
+      "main": [
+        [
+          {
+            "node": "Reply Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Doctors": {
+      "main": [
+        [
+          {
+            "node": "Reply Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Consultations": {
+      "main": [
+        [
+          {
+            "node": "Reply Consultation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "HOSP-A",
+    "name": "Central Paris Hospital",
+    "region": "Paris",
+    "capacity": 500
+  },
+  {
+    "_id": "HOSP-B",
+    "name": "Lyon Medical Center",
+    "region": "Lyon",
+    "capacity": 300
+  },
+  {
+    "_id": "HOSP-C",
+    "name": "Marseille Health",
+    "region": "Marseille",
+    "capacity": 450
+  }
+]

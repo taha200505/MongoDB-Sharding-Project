@@ -1,0 +1,119 @@
+services:
+  # -------------------------
+  # CONFIG SERVERS (Metadata)
+  # -------------------------
+  configserver1:
+    image: mongo:6.0
+    container_name: configserver1
+    command: mongod --configsvr --replSet rsConfig --port 27019 --bind_ip_all
+    ports: ["27019:27019"]
+    volumes:
+      - configserver1-data:/data/db
+    networks: [med-net]
+  configserver2:
+    image: mongo:6.0
+    container_name: configserver2
+    command: mongod --configsvr --replSet rsConfig --port 27019 --bind_ip_all
+    volumes:
+      - configserver2-data:/data/db
+    networks: [med-net]
+  configserver3:
+    image: mongo:6.0
+    container_name: configserver3
+    command: mongod --configsvr --replSet rsConfig --port 27019 --bind_ip_all
+    volumes:
+      - configserver3-data:/data/db
+    networks: [med-net]
+
+  # -------------------------
+  # SHARD 1 (Hospital A)
+  # -------------------------
+  shardsvr1:
+    image: mongo:6.0
+    container_name: shardsvr1
+    command: mongod --shardsvr --replSet rsShard1 --port 27018 --bind_ip_all
+    ports: ["27018:27018"]
+    volumes:
+      - shardsvr1-data:/data/db
+    networks: [med-net]
+  shardsvr2:
+    image: mongo:6.0
+    container_name: shardsvr2
+    command: mongod --shardsvr --replSet rsShard1 --port 27018 --bind_ip_all
+    volumes:
+      - shardsvr2-data:/data/db
+    networks: [med-net]
+
+  # -------------------------
+  # SHARD 2 (Hospital B)
+  # -------------------------
+  shardsvr3:
+    image: mongo:6.0
+    container_name: shardsvr3
+    command: mongod --shardsvr --replSet rsShard2 --port 27018 --bind_ip_all
+    ports: ["27028:27018"]
+    volumes:
+      - shardsvr3-data:/data/db
+    networks: [med-net]
+  shardsvr4:
+    image: mongo:6.0
+    container_name: shardsvr4
+    command: mongod --shardsvr --replSet rsShard2 --port 27018 --bind_ip_all
+    volumes:
+      - shardsvr4-data:/data/db
+    networks: [med-net]
+
+  # -------------------------
+  # SHARD 3 (Hospital C)
+  # -------------------------
+  shardsvr5:
+    image: mongo:6.0
+    container_name: shardsvr5
+    command: mongod --shardsvr --replSet rsShard3 --port 27018 --bind_ip_all
+    ports: ["27038:27018"]
+    volumes:
+      - shardsvr5-data:/data/db
+    networks: [med-net]
+  shardsvr6:
+    image: mongo:6.0
+    container_name: shardsvr6
+    command: mongod --shardsvr --replSet rsShard3 --port 27018 --bind_ip_all
+    volumes:
+      - shardsvr6-data:/data/db
+    networks: [med-net]
+
+  # -------------------------
+  # ROUTERS (Mongos)
+  # -------------------------
+  mongos1:
+    image: mongo:6.0
+    container_name: mongos1
+    command: mongos --configdb rsConfig/configserver1:27019,configserver2:27019,configserver3:27019 --bind_ip_all --port 27017
+    ports: ["27099:27017"]
+    volumes:
+      - ./medicale:/data/medicale
+    networks: [med-net]
+    depends_on: [configserver1, configserver2, configserver3, shardsvr1, shardsvr3, shardsvr5]
+
+  mongos2:
+    image: mongo:6.0
+    container_name: mongos2
+    command: mongos --configdb rsConfig/configserver1:27019,configserver2:27019,configserver3:27019 --bind_ip_all --port 27017
+    ports: ["27117:27017"]
+    networks: [med-net]
+    depends_on: [configserver1, configserver2, configserver3]
+
+networks:
+  med-net:
+    driver: bridge
+
+volumes:
+  configserver1-data:
+  configserver2-data:
+  configserver3-data:
+  shardsvr1-data:
+  shardsvr2-data:
+  shardsvr3-data:
+  shardsvr4-data:
+  shardsvr5-data:
+  shardsvr6-data:
