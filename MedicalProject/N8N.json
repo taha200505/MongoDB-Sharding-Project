@@ -1,0 +1,413 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "consultations",
+        "query": "[{\n  \"$count\":\"TotalConsultations\"\n}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        1360
+      ],
+      "id": "dd68bd14-6d04-4d7e-a395-94f34bdf1b9b",
+      "name": "Count the Number of Consultations"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "hospitals",
+        "query": "[{\n  \"$count\":\"TotalcountHospitals\"\n}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        1168
+      ],
+      "id": "4df87e42-270b-49b2-90b8-41821e1580f8",
+      "name": "count the number of hospitals",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "patients",
+        "query": "[{\n  \"$count\":\"TotalCountPatients\"\n}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        1568
+      ],
+      "id": "1a86f58b-6342-425c-b062-3e4fc9f00a81",
+      "name": "count number of patients"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "doctors",
+        "query": "[{\n  \"$count\":\"TotalCountDoctors\"\n}]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        1744
+      ],
+      "id": "f24b95c9-e903-4416-9540-d90b9c5084a0",
+      "name": "count number of doctors"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        544
+      ],
+      "id": "41eb0b1d-dd75-478b-92dc-e77f6603fb6a",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        464,
+        1392
+      ],
+      "id": "84675c82-9311-41f2-85d8-b00003e37740",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "TotalCountsinmedicalDB",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1424
+      ],
+      "id": "b6fd6102-8a50-485d-9447-3c51986e1490",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "metrics-medical",
+        "fields": "=TotalCountsinmedicalDB",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        1424
+      ],
+      "id": "0433ed49-a0ba-4d82-8c4c-24f790e86d3a",
+      "name": "Insert documents"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 768,
+        "width": 1056
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        1136
+      ],
+      "id": "490c7261-a74c-4670-8ca0-fd6952c8ccad",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "shards",
+        "query": "[\n  {\n    \"$count\":\"TotalShards\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c25df7ad-358e-4217-b664-b01d728eaa72",
+      "name": "Number of Shards"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "mongos",
+        "query": "[\n  {\n    \"$count\":\"TotalCountOfMongoses\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        304
+      ],
+      "id": "4ec4f12b-941d-410d-bd93-9955588aa730",
+      "name": "Number of mongoses"
+    },
+    {
+      "parameters": {
+        "collection": "clusterParameters",
+        "options": {
+          "projection": "{\"hasTwoOrMoreShards\":1}"
+        }
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        624
+      ],
+      "id": "ede0fc1e-2046-4010-b307-3812c36669d5",
+      "name": "Check that there is more than one shard or more"
+    },
+    {
+      "parameters": {
+        "collection": "placementHistory",
+        "options": {
+          "projection": "{\"shards\":1,\"nss\":1,\"_id\":0}"
+        }
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        816
+      ],
+      "id": "8a6033ba-2556-4da5-8157-e474570d5ecf",
+      "name": "check the shard distribution"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        288
+      ],
+      "id": "58674e69-f408-4268-a935-8826b07c94b0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        560,
+        752
+      ],
+      "id": "c8500882-2fe6-42bb-8b17-df76d94f6a39",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Initialize an empty object\nlet merged = {};\n\n// Loop through all incoming items\nfor (const item of items) {\n    // Merge each item into the 'merged' object\n    Object.assign(merged, item.json);\n}\n\n// Return as a single item\nreturn [{ json: merged }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        288
+      ],
+      "id": "93c922f6-5712-467f-8a3c-8265a46308fd",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "count the number of hospitals": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count the Number of Consultations": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "count number of patients": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "count number of doctors": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "count number of doctors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "count number of patients",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "count the number of hospitals",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Count the Number of Consultations",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Number of Shards",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check that there is more than one shard or more",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Number of mongoses",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "check the shard distribution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Number of Shards": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Number of mongoses": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check that there is more than one shard or more": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check the shard distribution": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "77c7a749-ae42-420f-8f14-892751037fe1",
+  "meta": {
+    "instanceId": "405913a3edf084fd6bf85a44915620255248f3990d1ac700eb9e9a529620f51e"
+  },
+  "id": "xQ2pVdngQHo6WpE0",
+  "tags": []
+}

@@ -1,0 +1,278 @@
+version: "3.8"
+
+networks:
+  mongodb_cluster:
+    driver: bridge
+
+services:
+  # Config Servers
+  configsvr:
+    image: mongo:7.0
+    command: --configsvr --replSet configReplSet --port 27017 --bind_ip_all --noauth
+    container_name: configsvr
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27017:27017
+    volumes:
+      - configsvr:/data/db
+
+  configsvr1:
+    image: mongo:7.0
+    command: --configsvr --replSet configReplSet --port 27017 --bind_ip_all --noauth
+    container_name: configsvr1
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27018:27017
+    volumes:
+      - configsvr1:/data/db
+
+  configsvr2:
+    image: mongo:7.0
+    command: --configsvr --replSet configReplSet --port 27017 --bind_ip_all --noauth
+    container_name: configsvr2
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27019:27017
+    volumes:
+      - configsvr2:/data/db
+
+  # Shard 1
+  shard1:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard1ReplSet --port 27018 --bind_ip_all
+    container_name: shard1
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27020:27018
+    volumes:
+      - shard1:/data/db
+
+  shard1-1:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard1ReplSet --port 27018 --bind_ip_all
+    container_name: shard1-1
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27021:27018
+    volumes:
+      - shard1-1:/data/db
+
+  shard1-2:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard1ReplSet --port 27018 --bind_ip_all
+    container_name: shard1-2
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27022:27018
+    volumes:
+      - shard1-2:/data/db
+
+  # Shard 2
+  shard2:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard2ReplSet --port 27019 --bind_ip_all
+    container_name: shard2
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27023:27019
+    volumes:
+      - shard2:/data/db
+
+  shard2-1:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard2ReplSet --port 27019 --bind_ip_all
+    container_name: shard2-1
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27024:27019
+    volumes:
+      - shard2-1:/data/db
+
+  shard2-2:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard2ReplSet --port 27019 --bind_ip_all
+    container_name: shard2-2
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27025:27019
+    volumes:
+      - shard2-2:/data/db
+
+  # Shard 3
+  shard3:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard3ReplSet --port 27029 --bind_ip_all
+    container_name: shard3
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27026:27029
+    volumes:
+      - shard3:/data/db
+
+  shard3-1:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard3ReplSet --port 27029 --bind_ip_all
+    container_name: shard3-1
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27027:27029
+    volumes:
+      - shard3-1:/data/db
+
+  shard3-2:
+    image: mongo:7.0
+    command: --shardsvr --replSet shard3ReplSet --port 27029 --bind_ip_all
+    container_name: shard3-2
+    networks:
+      - mongodb_cluster
+    ports:
+      - 27028:27029
+    volumes:
+      - shard3-2:/data/db
+
+  # Mongos Routers
+  mongos:
+    image: mongo:7.0
+    container_name: mongos
+    networks:
+      - mongodb_cluster
+    depends_on:
+      - configsvr
+      - configsvr1
+      - configsvr2
+      - shard1
+      - shard2
+      - shard3
+    command: mongos --configdb configReplSet/configsvr:27017,configsvr1:27017,configsvr2:27017 --bind_ip_all --port 27017
+    ports:
+      - 27030:27017
+
+  mongos2:
+    image: mongo:7.0
+    container_name: mongos2
+    networks:
+      - mongodb_cluster
+    depends_on:
+      - configsvr
+      - configsvr1
+      - configsvr2
+      - shard1
+      - shard2
+      - shard3
+    command: mongos --configdb configReplSet/configsvr:27017,configsvr1:27017,configsvr2:27017 --bind_ip_all --port 27017
+    ports:
+      - 27031:27017
+
+  mongos3:
+    image: mongo:7.0
+    container_name: mongos3
+    networks:
+      - mongodb_cluster
+    depends_on:
+      - configsvr
+      - configsvr1
+      - configsvr2
+      - shard1
+      - shard2
+      - shard3
+    command: mongos --configdb configReplSet/configsvr:27017,configsvr1:27017,configsvr2:27017 --bind_ip_all --port 27017
+    ports:
+      - 27032:27017
+
+  # Monitoring
+  # mongodb_exporter:
+  #   image: bitnami/mongodb-exporter:latest
+  #   container_name: mongodb_exporter
+  #   networks:
+  #     - mongodb_cluster
+  #   command:
+  #     - "--mongodb.uri=mongodb://mongos:27017"
+  #   ports:
+  #     - "9216:9216"
+  #   depends_on:
+  #     - mongos
+
+  # prometheus:
+  #   image: prom/prometheus
+  #   container_name: prometheus
+  #   networks:
+  #     - mongodb_cluster
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   depends_on:
+  #     - mongodb_exporter
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   networks:
+  #     - mongodb_cluster
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=YourNewPassword123
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - prometheus
+
+  # n8n
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+    networks:
+      - mongodb_cluster
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=mongodb
+      - DB_MONGODB_CONNECTION_URL=mongodb://mongos:27017/n8n?authSource=admin
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_PORT=5678
+    depends_on:
+      - mongos
+
+
+  # n8n1:
+  #   image: n8nio/n8n:latest
+  #   container_name: n8n1
+  #   restart: always
+  #   networks:
+  #     - mongodb_cluster
+  #   ports:
+  #     - "5677:5678"    
+  #   environment:
+  #     - DB_TYPE=mongodb
+  #     - DB_MONGODB_CONNECTION_URL=mongodb://mongos:27017/n8n1?authSource=admin
+  #     - N8N_BASIC_AUTH_ACTIVE=false
+  #     - N8N_PORT=5678   
+  #   depends_on:
+  #     - mongos
+
+
+volumes:
+  configsvr:
+  configsvr1:
+  configsvr2:
+  shard1:
+  shard1-1:
+  shard1-2:
+  shard2:
+  shard2-1:
+  shard2-2:
+  shard3:
+  shard3-1:
+  shard3-2:

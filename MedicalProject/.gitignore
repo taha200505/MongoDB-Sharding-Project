@@ -1,0 +1,8 @@
+venv
+*.pyc 
+dataset.csv
+index.html
+producer.py
+test.ipynb 
+generated_data
+react-flow
